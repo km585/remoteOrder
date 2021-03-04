@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import firebase from "firebase";
 import "firebase/firestore";
+import { render } from '@testing-library/react';
 
 
 const Orders = (props) => {
@@ -10,7 +11,13 @@ const Orders = (props) => {
     const [orderList,setOrderList] = useState(null);
     const [popup,setPopup] = useState(false);
     const [searchedID,setSearchedID] = useState();
+    const [status,setStatus] = useState();
+    const [changer,setChanger] = useState("停止する");
+    const [list,setList] = useState([]);
+    const [test,setTest] = useState("default");
+    const [orders,setOrders] = useState([]);
     const shopID = props.shopID;
+
 
     function getFireData(){
         let db =firebase.database();
@@ -27,10 +34,29 @@ const Orders = (props) => {
 
   
 
+    async function getOrders(){
+        
+        await firebase
+        .firestore()
+        .collection("owners").doc(shopID).collection("orders")
+        .onSnapshot((snapshot) => {
+            let list = []  
+            snapshot.forEach((doc) => {
+              
+              list.push(doc.data());
+            })
+            setOrders(list)
+        })
+        
+    }
+
+  
+
     function makeTable(){
         
         if (data != null && data.length == 0){
             getFireData();
+          
         }
         let ids =[];
         let lists =[];
@@ -50,6 +76,7 @@ const Orders = (props) => {
             };
             lists.push(l);
         }
+       
         setOrderID(ids);
         setOrderList(lists);
     }
@@ -63,7 +90,8 @@ const Orders = (props) => {
             let inner = [orderID[i],orderList[i]];
             com.push(inner);
         }
-        return com;
+        
+        setList(com);
     }
 
     function makeItServerd(id){
@@ -99,11 +127,73 @@ const Orders = (props) => {
         
     }
 
+    function getStatus(){
+        let db =firebase.database();
+        let ref = db.ref(shopID+'/Info/status');
+        ref.once('value',(snapshot)=>{
+            if (snapshot.exists()){
+                setStatus(snapshot);
+            }else{
+                ref.set(true);
+            }
+        })
+    }
+
+    function changeStatus(){
+        let db =firebase.database();
+        let ref = db.ref(shopID+'/Info/');
+        if (status==false){
+           ref.update({status:false}); 
+           setChanger("再開する");
+        }else{
+            ref.update({status:true});
+            setChanger("停止する");
+        }
+
+    }
+
    
+
+    if (status==null){
+        getStatus();
+    }
+    
+    //ここでfirestoreから読み込んだ物をorders stateに入れてる。
+    useEffect(() => {
+        async function getData(){
+        
+            await firebase
+            .firestore()
+            .collection("owners").doc(shopID).collection("orders")
+            .onSnapshot((snapshot) => {
+                let list = []  
+                snapshot.forEach((doc) => {
+                  
+                  list.push(doc.data());
+                })
+                setOrders(list)
+            })
+            
+        }
+        getData();
+
+    },[])
+    
+    useEffect(()=>{
+        changeStatus();
+    },[status])
+
+    useEffect(()=>{
+        makeCombine();
+    },[])
+
   
+
+   
 
     return (
         <div>
+   
             <h2>オーダーの検索</h2>
                     <div className="editer"> 
                          <input type="number" id="searchByID" placeholder="OrderID（半角数字）"></input>
@@ -112,8 +202,8 @@ const Orders = (props) => {
                     
                     
                     {popup ?
-                    <div className="orderSearch">
-                        <div className="orderSearch_inner">
+                    <div className="basket">
+                        <div className="basket_inner">
                             <h>ご注文</h>
 
                           <div className="item_list">   
@@ -131,22 +221,37 @@ const Orders = (props) => {
                     
                 
             <h2>未提供のオーダー</h2>
+            
             <table　id="orderTable">
                 <tr>
                     <th id="idCell">Order ID</th><th id="orderCell">Orders</th><th　id="buttonCell"></th>
                 </tr>
-                {makeCombine().map((item)=>(
+                {list.map((item)=>(
                     <tr>
                     <td>{item[0]}</td><td>{item[1]}</td><td><button onClick={()=>{makeItServerd(item[0]);}}>提供完了</button></td>
                     </tr>
                 ))}
                 
             </table>
+            
+                <h2>オーダーを一時的に停止する</h2>
+            <div className="editer">
+                <a>現在のステータス：</a>{status ? <a　id="status_green">利用可能</a>: <a id="status_red">利用停止中</a>}
+                <a> </a><button onClick={()=>{setStatus(!status);}}>{changer}</button>
+                <p>一時的にお客様からのSmartOrderを通した注文を停止することができます。</p>
+            </div>
+//ここでordersのなかを回して、データを表示しようとしたけど、表示されない。試しに”aaa"を一周ごとにプリントさせようとしたけど、それすらできない。
+//ちゃんと中身を回せてない？
+//でも下のorders.lengthではちゃんと長さが表示される。
+            {orders.map((item)=>{
+             
+                <p>aaa</p>
+            
+                console.log(item.orderID)
+            })}
+            {orders.length}
+            
          </div>
-
-            
-            
-        
         
         
     );

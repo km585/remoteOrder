@@ -168,8 +168,8 @@ const Orders = (props) => {
             .onSnapshot((snapshot) => {
                 let list = []  
                 snapshot.forEach((doc) => {
-                  
-                  list.push(doc.data());
+                  let item = doc.data()
+                  list.push(item);       
                 })
                 setOrders(list)
             })
@@ -240,17 +240,13 @@ const Orders = (props) => {
                 <a> </a><button onClick={()=>{setStatus(!status);}}>{changer}</button>
                 <p>一時的にお客様からのSmartOrderを通した注文を停止することができます。</p>
             </div>
-//ここでordersのなかを回して、データを表示しようとしたけど、表示されない。試しに”aaa"を一周ごとにプリントさせようとしたけど、それすらできない。
-//ちゃんと中身を回せてない？
-//でも下のorders.lengthではちゃんと長さが表示される。
-            {orders.map((item)=>{
-             
-                <p>aaa</p>
-            
-                console.log(item.orderID)
-            })}
-            {orders.length}
-            
+            <table>
+                {orders.map((item)=>(
+                    <tr>
+                    <td>{item.orderID}</td><td>{item.list}</td><td>{item.bill}</td>
+                    </tr>
+                ))}
+            </table>            
          </div>
         
         

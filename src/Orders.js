@@ -2,6 +2,8 @@ import React, { useState,useEffect } from 'react';
 import firebase from "firebase";
 import "firebase/firestore";
 import { render } from '@testing-library/react';
+import Button from '@material-ui/core/Button';
+import { makeStyles } from '@material-ui/core/styles';
 
 
 const Orders = (props) => {
@@ -187,17 +189,13 @@ const Orders = (props) => {
         makeCombine();
     },[])
 
-  
-
-   
-
     return (
         <div>
    
             <h2>オーダーの検索</h2>
                     <div className="editer"> 
                          <input type="number" id="searchByID" placeholder="OrderID（半角数字）"></input>
-                         <button onClick={()=>{searchOrder();}}>検索</button>
+                         <Button variant="contained" onClick={()=>{searchOrder();}} color="primary">検索</Button>
                       </div>
                     
                     
@@ -228,25 +226,24 @@ const Orders = (props) => {
                 </tr>
                 {list.map((item)=>(
                     <tr>
-                    <td>{item[0]}</td><td>{item[1]}</td><td><button onClick={()=>{makeItServerd(item[0]);}}>提供完了</button></td>
+                        <td>{item[0]}</td><td>{item[1]}</td><td><button onClick={()=>{makeItServerd(item[0]);}}>提供完了</button></td>
                     </tr>
                 ))}
                 
             </table>
             
-                <h2>オーダーを一時的に停止する</h2>
+            <h2>オーダーを一時的に停止する</h2>
             <div className="editer">
                 <a>現在のステータス：</a>{status ? <a　id="status_green">利用可能</a>: <a id="status_red">利用停止中</a>}
-                <a> </a><button onClick={()=>{setStatus(!status);}}>{changer}</button>
+                <a> </a><Button variant="contained" onClick={()=>{setStatus(!status);}} 
+                style={{maxWidth: '130px', maxHeight: '20px'}}　color="secondary">{changer}</Button>
                 <p>一時的にお客様からのSmartOrderを通した注文を停止することができます。</p>
             </div>
-            <table>
-                {orders.map((item)=>(
-                    <tr>
+            {orders.map((item)=>(
+                <tr>
                     <td>{item.orderID}</td><td>{item.list}</td><td>{item.bill}</td>
-                    </tr>
-                ))}
-            </table>            
+                </tr>
+            ))}          
          </div>
         
         

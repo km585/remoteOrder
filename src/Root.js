@@ -13,16 +13,9 @@ const Root = () => {
     const dispatch = useDispatch();
     const account = useSelector((state) => state.AccountReducer.isSignedIn);
     const [owners,setOwners] = useState([]);
+    const [initial,setInitial] = useState(false);
 
-    function getOwners(){
     
-      let db = firebase.database();
-      let ref = db.ref("/");
-      ref.once('value',(snapshot)=>{
-          setOwners(snapshot.val())
-      });
-     
-  }
 
     function componentDidMount() {
         firebase.auth().onAuthStateChanged(user => {
@@ -46,18 +39,33 @@ const Root = () => {
         return firebase.auth().currentUser.uid;
       }
 
-     
-
+  
     
 
 
     componentDidMount();
 
     useEffect(()=>{
+      async function getOwners(){
+    
+        await firebase.firestore()
+        .collection("owners")
+        .onSnapshot((snapshot)=>{
+          let list =[]
+          snapshot.forEach((doc)=>{
+            
+            let item = doc.id;
+            list.push(item);
+            
+          })
+     
+          setOwners(list);
+       //   console.log("Root_getOwner!");
+    
+        })
+      }
       getOwners();
-
-  
-    });
+    },[]);
 
     return (
         <div>
@@ -75,8 +83,7 @@ const Root = () => {
            
             
               <Route  exact path="/" component={Home}/>
-              
-              {Object.keys(owners).map((item)=>(<Route path={"/"+item} render={()=> <App shopID={item}  />}/>))} 
+              {owners.map((item)=>(<Route key={item} path={"/"+item} render={()=> <App shopID={item}  />}/>))} 
                    
             </Switch>
             }

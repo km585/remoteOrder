@@ -10,12 +10,12 @@ import { useSelector, useDispatch } from "react-redux";
 
 
 const Home = (props) => {
-    const [popup,setPopup] =useState(true);
-    const [user,setUser] = useState(false);
+
+
     const dispatch = useDispatch();
     const account = useSelector((state) => state.AccountReducer.isSignedIn);
-    const [owners,setOwners] = useState([]);
     const [shopName,setShopName] = useState();
+    const [owners,setOwners] = useState([]);
 
    
 
@@ -28,7 +28,7 @@ const Home = (props) => {
             });
             
           }else {
-            setUser(true);
+            
             dispatch({
               type:'LOGIN',
               payload:{isSignedIn:true}
@@ -39,46 +39,68 @@ const Home = (props) => {
       }
       function logout() {
         firebase.auth().signOut();
-        setUser(false);
+
       }
 
-     
-      function getOwners(){
-    
-        let db = firebase.database();
-        let ref = db.ref("/");
-        ref.once('value',(snapshot)=>{
-            setOwners(snapshot.val())
-        });
-       
-    }
 
     function initialName(){
-      let db =firebase.database();
-      let ref = db.ref(props.user+'/Info/shop_name');
+      firebase.firestore()
+      .collection("owners").doc(props.user)
+      .collection("Info").doc("shop_name")
+      .get().then((snapshot)=>{
+        if (snapshot.exists){
+          setShopName(snapshot.data().display_name);
+        }else{
+          
+        }
+        
+      })
+      //console.log("initials!");
+
       
-          ref.on('value',(snapshot) =>{
-              if (snapshot.val()==null) {
-                  setShopName("NO NAME");
-              }else{
-                  setShopName(
-                snapshot.val()
-              );
-              }
-              
-            });
-      
-  }
+
+
+    }
+
+    useEffect(()=>{
+      async function getOwners(){
+    
+        await firebase.firestore()
+        .collection("owners")
+        .onSnapshot((snapshot)=>{
+          let list =[]
+          
+          snapshot.forEach((doc)=>{
+            
+            let item = doc.id;
+            list.push(item);
+          
+            
+          })
+     
+          setOwners(list);
+          
+         // console.log("Home_getOwners!");
+    
+        })
+      }
+      getOwners();
+    },[]);
+
+ 
 
 
     
     
       componentDidMount()
-
-      useEffect(()=>{
-        getOwners();
+      if (shopName==null){
         initialName();
-      });
+      }
+      
+      useEffect(()=>{
+          initialName();
+          //console.log("Home!");
+      },[shopName]);
     
 
     return (
@@ -99,9 +121,6 @@ const Home = (props) => {
             </div>
             :
             <Login />
-              //<nav>
-                //{Object.keys(owners).map((item)=>(<Link to={"/"+item} >次</Link>))} 
-              //</nav>
 
             }
           

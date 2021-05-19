@@ -10,6 +10,8 @@ import Orders from './Orders';
 import {connect}from 'react-redux';
 import "firebase/firestore";
 import firebase from "firebase";
+import logo from './logo.png';
+
 
 class App extends React.Component {
 
@@ -60,24 +62,35 @@ class App extends React.Component {
     this.setState({isOrders:true});
   }
 
+  
   initializeDatabase(){
-    let db = firebase.database();
-    let ref = db.ref(this.shopID+'/Info/opening_hours');
-    ref.once("value",snapshot => {
-        if (snapshot.exists()){
-            return;
-        }else{
-            ref.set({
-                Mon:" ",
-                Tue:" ",
-                Wed:" ",
-                Thu:" ",
-                Fri:" ",
-                Sat:" ",
-                Sun:" "
-              })
-        }
+    let ref = firebase.firestore()
+    .collection("owners").doc(this.shopID)
+    .collection("Info").doc("open_hours")
+    
+    ref.get().then((doc)=>{
+      if (doc.exists){
+        return ;
+      }else{
+        ref.set({
+      Mon:" ",
+      Tue:" ",
+      Wed:" ",
+      Thu:" ",
+      Fri:" ",
+      Sat:" ",
+      Sun:" "
     })
+      }
+    })
+
+    firebase.firestore()
+    .collection("owners").doc(this.shopID)
+    .set({initialized:true});
+
+    
+
+
   }
 
   
@@ -86,7 +99,6 @@ class App extends React.Component {
 
   render(){
     this.initializeDatabase();
-
     
 
     
@@ -102,9 +114,11 @@ class App extends React.Component {
       num=<Orders shopID={this.shopID}/>;
     }
 
+
     return  <div>
-      <div id="title">
-        <h1>Smart Order</h1>
+      <div className="title">
+        
+        <img src={logo} id="logo" />
         
         
       </div>

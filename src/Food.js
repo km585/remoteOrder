@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import firebase from "firebase";
 import "firebase/firestore";
 import Item from './Item';
@@ -9,17 +9,6 @@ const Food =(props)=> {
     const shopID = props.shopID;
 
 
-    function getFireData(){
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Menu');
-        ref.orderByChild("type")
-        .on('value',(snapshot) =>{
-          setData(
-            snapshot.val()
-          );
-        });
-    }
-
     function getFood(){
         let list=[];
         if (data != null){
@@ -29,32 +18,53 @@ const Food =(props)=> {
             }
           })
         }
-        
+        //console.log("getting FOOD...!");
 
         return list;
     }
 
-      if (data != null && data.length == 0){
-         
-        getFireData();
-    }
+    useEffect(()=>{
+      let mounted = true;
+      async function getData(){
+        //console.log("reading FOOD...!");
+        
+        if (mounted){
+          await firebase
+        .firestore()
+        .collection("owners").doc(shopID).collection("Menu")
+        .onSnapshot((snapshot) => {
+            let list = []  
+            snapshot.forEach((doc) => {
+              let item = doc.data();
+              list.push(item);
+            })
+            if (mounted){setData(list);}
+          })
+        }
+      }
+    
+      getData();
+      return()=> {mounted=false;
+        //console.log("claen up Foods!")
+      };
+    },[])
 
 
     return (
         
         <div>
           <div>
-            <h2>Food menu</h2>
+            <h2></h2>
             <a id="inform">※メニューからなくなっている商品は品切れ、販売停止中となっております。</a>
             {getFood().map((item)=>(
                 
-                <div>
+                <li key={item.ID}>
                 {item.outOfStock ?
                 null
-                :<Item id={item.id} name={item.name} price={item.price}  shopID={shopID} />
+                :<Item id={item.ID} name={item.name} price={item.price}  shopID={shopID} />
                 }
                 
-              </div>
+              </li>
             ))}
           </div>
 

@@ -7,8 +7,10 @@ import { useSelector, useDispatch } from "react-redux";
 import firebase from "firebase";
 import Confirm from './confirm';
 import Setting from './Setting';
+import logo from './logo.png';
 
 const Nav　= (props) =>{
+    const [show,setShow] = useState(false);
     const [popup,setPopup] =useState(false);
     const [login,setLogin] = useState(false);
     const [user,setUser] = useState(false);
@@ -81,28 +83,30 @@ const Nav　= (props) =>{
 
         <div className="nav" >
           
-          
-          {user ?
-          <div id="edit_buttons">
-          <p id ="button4"><a onClick={()=>{setSetting(!setting);}}>SETTING</a></p> 
-          <p id ="button4"><a onClick={()=>{clickEdit();}}>EDIT</a></p>
+          <img src={logo} id="logo" />
+          <div className="menu_icon">
+            <i className="fas fa-bars" ></i>
           </div>
-          :null
-          }
-         
-       
-          <div className="list">
+
+          <ul className={show ?"opend_nav":"closed_nav"}>
             
            
-            <p id="button1"><a onClick={()=>{clickFood();}}>{props.navli[0]}</a></p>
-            <p id="button1"><a onClick={()=>{clickDrink();}}>{props.navli[1]}</a></p>
+            <li id="button1" onClick={()=>{clickFood();}}>{props.navli[0]}</li>
+            <li id="button1" onClick={()=>{clickDrink();}}>{props.navli[1]}</li>
             {user ?
-            <p id="button1"><a onClick={()=>{clickOrders();}}>ORDERS</a></p>
-            : <p id="button1"><a onClick={()=>{togglePopup();}}>BASKET</a></p>
+            <li id="button1" onClick={()=>{clickOrders();}}>ORDERS</li>
+            : <li id="button1"onClick={()=>{togglePopup();}}>BASKET</li>
+            }
+            {user ?
+               <div id="edit_buttons">
+                 <li id ="button4" onClick={()=>{setSetting(!setting);}}>SETTING</li> 
+                 <li id ="button4" onClick={()=>{clickEdit();}}>EDIT</li>
+               </div>
+              :null
             }
             
             
-          </div>
+          </ul>
 
           
           
@@ -121,9 +125,10 @@ const Nav　= (props) =>{
             }
          
           </div>
+          </div>
           
           
-        </div>
+  
         
 
     );

@@ -1,249 +1,281 @@
 import React, { useState,useEffect } from 'react';
 import firebase from "firebase";
 import "firebase/firestore";
-import { render } from '@testing-library/react';
-import Button from '@material-ui/core/Button';
-import { makeStyles } from '@material-ui/core/styles';
+import Confirm from './confirm';
+
 
 
 const Orders = (props) => {
-    const [data,setData] = useState([]);
+    
     const [bill,setBill] = useState([]);
+    const [sum,setSum] = useState();
     const [orderID,setOrderID] = useState(null);
     const [orderList,setOrderList] = useState(null);
     const [popup,setPopup] = useState(false);
     const [searchedID,setSearchedID] = useState();
-    const [status,setStatus] = useState();
-    const [changer,setChanger] = useState("停止する");
-    const [list,setList] = useState([]);
-    const [test,setTest] = useState("default");
+    //const [status,setStatus] = useState();
+    const [eatIn,setEatIn] = useState();
     const [orders,setOrders] = useState([]);
+    const [settle, setSettle] = useState(false);
     const shopID = props.shopID;
 
 
-    function getFireData(){
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Order');
-        ref.orderByChild('served')
-        .equalTo(false)
-        .limitToFirst(10)
-        .on('value',(snapshot) =>{
-          setData(
-            snapshot.val()
-          );
-        });
-    }
-
-  
-
-    async function getOrders(){
-        
-        await firebase
-        .firestore()
+    function changeServedwithID(id){
+        firebase.firestore()
         .collection("owners").doc(shopID).collection("orders")
-        .onSnapshot((snapshot) => {
-            let list = []  
-            snapshot.forEach((doc) => {
-              
-              list.push(doc.data());
+        .doc(id)
+        .update({served:true})
+    }
+
+    function makeItServerd2(id){
+        firebase.firestore()
+        .collection("owners").doc(shopID).collection("orders")
+        .where("orderID","==",id)
+        .get().then((querySnapshot)=>{
+            querySnapshot.forEach((doc)=>{
+                changeServedwithID(doc.id);
             })
-            setOrders(list)
         })
-        
-    }
 
-  
-
-    function makeTable(){
-        
-        if (data != null && data.length == 0){
-            getFireData();
-          
-        }
-        let ids =[];
-        let lists =[];
-        if (data == null || data.length==0){
-          return ;
-        }
-        for (let i in data){
-            ids.push(data[i].orderID);
-            let l=[];
-            for (let ii in data[i].list) {
-                if (ii == (data[i].list).length-1){
-                    l.push(data[i].list[ii]);
-                }else{
-                    l.push(data[i].list[ii]+", ");
-                }
-                
-            };
-            lists.push(l);
-        }
-       
-        setOrderID(ids);
-        setOrderList(lists);
-    }
-
-    function makeCombine(){
-        if (orderID==null || orderList==null){
-            makeTable();
-        }
-        let com = [];
-        for (let i in orderID){
-            let inner = [orderID[i],orderList[i]];
-            com.push(inner);
-        }
-        
-        setList(com);
-    }
-
-    function makeItServerd(id){
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Order/'+id);
-        ref.update({
-            served:true,
-        });
         setOrderID(null);
         setOrderList(null);
     }
 
-    function searchOrder(){
+
+    function searchOrderWithID(){
         let id = document.getElementById("searchByID").value;
         setSearchedID(id);
         if (id==null || id ==""){
             return;
         }
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Order/'+id);
-        ref.orderByKey()
-        .on('value',(snapshot) =>{
-            setBill(
-              snapshot.val()
-            );
-          });
-        if (bill == null || bill.length == 0){
-            return;
-
-        }else{
-            setPopup(!popup);
-        }
         
-    }
-
-    function getStatus(){
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Info/status');
-        ref.once('value',(snapshot)=>{
-            if (snapshot.exists()){
-                setStatus(snapshot);
-            }else{
-                ref.set(true);
-            }
+        let db =firebase.firestore()
+        .collection("owners").doc(shopID).collection("orders")
+        .where("orderID","==",id*1)
+        .get().then((querySnapshot)=>{
+            
+            querySnapshot.forEach((doc)=>{
+                let item = doc.data();
+                
+                setBill(item);
+                setPopup(!popup);
+            })
+            
         })
     }
 
-    function changeStatus(){
-        let db =firebase.database();
-        let ref = db.ref(shopID+'/Info/');
-        if (status==false){
-           ref.update({status:false}); 
-           setChanger("再開する");
-        }else{
-            ref.update({status:true});
-            setChanger("停止する");
+    function searchOrderWithTable(){
+        let id = document.getElementById("searchByID").value;
+        setSearchedID(id);
+        if (id==null || id ==""){
+            return;
         }
+        
+        let db =firebase.firestore()
+        .collection("owners").doc(shopID).collection("orders")
+        .where("table","==",id*1).where("served","==",true)
+        .where("settled","==",false)
+        .get().then((querySnapshot)=>{
+            let l = []
+            let s = 0;
+            
+            querySnapshot.forEach((doc)=>{
+                let item = doc.data();
+                l.push(item);
+                s += item.bill;
+            })
+            setSum(s);
+            setBill(l);
+            setPopup(!popup);
+            
+        })
+    }
+
+    function settleID(id){
+       
+        let ref= firebase.firestore();
+
+        ref.collection("owners").doc(shopID).collection("orders")
+        .doc(id).update({settled:true});
+    }
+
+    function makeSettled(bill){
+
+        bill.map((item)=>{
+            firebase.firestore()
+        .collection("owners").doc(shopID).collection("orders")
+        .where("orderID","==",item.orderID).where("settled","==",false)
+        .get().then((querySnapshot)=>{
+            querySnapshot.forEach((doc)=>{
+                settleID(doc.id);
+            })
+        })
+        })
+        setSettle(!settle);
+        setPopup(!popup);
+        
 
     }
 
-   
 
-    if (status==null){
-        getStatus();
+
+
+
+
+  
+
+  
+
+   useEffect(()=>{
+    async function getEatIn(){
+        let ref = firebase.firestore()
+        .collection("owners").doc(shopID)
+        .collection("Info").doc("Eat_in");
+
+        await ref.get().then((doc)=>{
+            if (doc.exists){
+                setEatIn(doc.data().Eat_in);
+             
+            }else{
+                ref.set({Eat_in: false})
+                setEatIn(false);
+            }
+        })
     }
-    
-    //ここでfirestoreから読み込んだ物をorders stateに入れてる。
+    getEatIn();
+   },[])
+
+
     useEffect(() => {
         async function getData(){
         
             await firebase
             .firestore()
             .collection("owners").doc(shopID).collection("orders")
+            .where("served","==",false)
+            .orderBy("orderID", "asc")
+            .limit(10)
             .onSnapshot((snapshot) => {
                 let list = []  
                 snapshot.forEach((doc) => {
-                  let item = doc.data()
-                  list.push(item);       
+                  let item = doc.data();
+                  list.push(item);
                 })
                 setOrders(list)
             })
             
         }
         getData();
+        //console.log("Orders_getData!");
 
     },[])
     
-    useEffect(()=>{
-        changeStatus();
-    },[status])
+    
 
-    useEffect(()=>{
-        makeCombine();
-    },[])
+  
+
+  
+
+   
 
     return (
         <div>
    
             <h2>オーダーの検索</h2>
-                    <div className="editer"> 
-                         <input type="number" id="searchByID" placeholder="OrderID（半角数字）"></input>
-                         <Button variant="contained" onClick={()=>{searchOrder();}} color="primary">検索</Button>
+                    {eatIn ?
+                      <div　className="editer">
+                          <input type="number" id="searchByID" placeholder="テーブル（半角数字）"></input>
+                         <button onClick={()=>{searchOrderWithTable();}}>検索</button>
                       </div>
+                    :
+                      <div className="editer"> 
+                         <input type="number" id="searchByID" placeholder="OrderID（半角数字）"></input>
+                         <button onClick={()=>{searchOrderWithID();}}>検索</button>
+                      </div>
+                    }
+                    
                     
                     
                     {popup ?
                     <div className="basket">
-                        <div className="basket_inner">
-                            <h>ご注文</h>
+                        
 
-                          <div className="item_list">   
-                        {bill.list.map((item)=>(
-                            <a>{item}<br /></a>
+                        {eatIn ?
+                        <div className="basket_inner">
+                            <div id="back_button">
+                              <button　 onClick={()=>{setPopup(!popup);}} id="conf_button3">×</button>
+                              </div>
+                        <div id="order_head"><a>テーブル番号　{searchedID}　のご注文</a></div>
+                        <div className="item_list">   
+                        {bill.map((item)=>(
+                            
+                            <div key={item.orderID}>{item.list.map((i)=>(<li key={i}>{i}<br/></li>))}</div>
                         ))}
+                        {bill.length ==0 ?
+                        <a>未精算の注文はありません。</a>
+                        :
+                        <button onClick={()=>{setSettle(!settle);}}>精算完了</button>
+
+                        }
+                        {settle ?
+                        <Confirm message="精算が完了しましたか？"　action="はい" order={()=>{makeSettled(bill);}} closePopup={()=>{setSettle(!settle)}} />
+                        :
+                        null
+                        }
+
+
+                        
                           </div>
-                          <button　 onClick={()=>{setPopup(!popup);}}>戻る </button>
+                          
+                          
+                              <p className='sum'>合計金額：　¥{sum}</p>
+                              </div>
+                        :
+                        <div className="basket_inner">
+                            <div id="back_button">
+                              <button　 onClick={()=>{setPopup(!popup);}} id="conf_button3">× </button>
+                              </div>
+                        <div id="order_head"><h>注文番号　{searchedID}　のご注文</h></div>
+                        <div className="item_list">   
+                        {bill.list.map((item)=>(
+                            <li key={item}>{item}<br/></li>
+                        ))}
+                      
+                        <li key="info">{bill.contact}</li>
+                          </div>
                               <p className='sum'>合計金額：　¥{bill.bill}</p>
+                              </div>
+                        }
+                          
                               
                         </div>
-                    </div>
+                   
+
                     :null
                     } 
                     
                 
             <h2>未提供のオーダー</h2>
             
-            <table　id="orderTable">
+
+            <table id="orderTable">
+                <tbody>
                 <tr>
-                    <th id="idCell">Order ID</th><th id="orderCell">Orders</th><th　id="buttonCell"></th>
+                {eatIn ? <th id="idCell">Table</th>:<th id="idCell">Order ID</th>}<th id="orderCell">Orders</th><th　id="buttonCell"></th>
                 </tr>
-                {list.map((item)=>(
-                    <tr>
-                        <td>{item[0]}</td><td>{item[1]}</td><td><button onClick={()=>{makeItServerd(item[0]);}}>提供完了</button></td>
+                {orders.map((item)=>(
+                    <tr key={item.table}>
+                        
+                    {eatIn ? <td>{item.table}</td>:<td>{item.orderID}</td>}<td>{item.list.map((item)=>(<a key={item}>{item}<br/></a>))}</td><td><button onClick={()=>{makeItServerd2(item.orderID);}}>提供完了</button></td>
+                   
                     </tr>
                 ))}
+                </tbody>
+            </table>  
+
                 
-            </table>
             
-            <h2>オーダーを一時的に停止する</h2>
-            <div className="editer">
-                <a>現在のステータス：</a>{status ? <a　id="status_green">利用可能</a>: <a id="status_red">利用停止中</a>}
-                <a> </a><Button variant="contained" onClick={()=>{setStatus(!status);}} 
-                style={{maxWidth: '130px', maxHeight: '20px'}}　color="secondary">{changer}</Button>
-                <p>一時的にお客様からのSmartOrderを通した注文を停止することができます。</p>
-            </div>
-            {orders.map((item)=>(
-                <tr>
-                    <td>{item.orderID}</td><td>{item.list}</td><td>{item.bill}</td>
-                </tr>
-            ))}          
+            
          </div>
         
         

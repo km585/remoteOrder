@@ -47,13 +47,14 @@ const Reciept　= (props) => {
                     <div id="b1">
                         
                         <button onClick={props.order}>{props.action}</button><br />
-                        <a className="warning">上のボタンをクリックすると自動的にスクリーンショットが保存されます。</a>
+                        <br />
+                        <a className="warning">上のボタンをクリックして注文完了票をブラウザに保存。<br />もしくはスクリーンショットで端末に保存してください。</a>
                     </div>
                     
                     
                     <div　className="warning">
                         <a>一度メニューに戻ると、再度この注文完了票を表示することはできません。</a><br />
-                        <a>画像として保存をし、写真フォルダに注文完了票が保存されていることを確認してください。</a><br />
+                        <a>必ずこの注文完了票を保存してください。</a><br />
                         <p>お帰りの際にこの注文完了票をご提示ください。<br />スタッフが確認致します。</p>
                         </div>
                     

@@ -10,6 +10,7 @@ class Confirm extends Component {
         this.quantity= 1;
         this.message = props.message;
         this.action = props.action;
+        this.warning = props.warning;
         this.today = new Date();
         this.state={
             message:this.message,
@@ -94,7 +95,19 @@ class Confirm extends Component {
     render (){
         return (
             <div className='conf'  >
-                <div className='conf_inner'   id="conf">
+                <div className={this.props.design!=null?　this.props.design:"basket_conf"}   id="conf">
+                <div id="back_button">
+                    <button onClick={this.props.closePopup}　id="conf_button3">×</button>
+                </div>
+                    
+                    {this.props.pic ?
+         
+                    <img src={this.props.pic}id="conf_pic" />
+                    
+                    :
+                    null
+                    }
+
                     
                     <div className="msg">
                         {this.state.message}
@@ -111,21 +124,25 @@ class Confirm extends Component {
                         <div></div>
                         }
 
-                    <div className="buttons">
+                    <div className="conf_button">
                         <div >
                         {this.state.action ?
-                        <button onClick={this.doAction} id="button2">{this.state.action}</button>
+                        <button onClick={this.doAction} id="conf_button2">{this.state.action}</button>
                         :<div></div>
                         }
                          </div>
-
-                      <div >
-                        <button onClick={this.props.closePopup}　id="button3">戻る</button>
-                      </div>
-
                     </div>
+
+                    {this.warning?
+                    <div className="conf_warn">
+                        <a id="conf_warning_a">{this.warning}</a>
+                        </div>
+                    :null
+                    }
                     
-                </div>
+                    
+                </div >
+                
             </div>
         )
     }

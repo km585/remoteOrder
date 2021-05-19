@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Confirm from './confirm';
 import { useState } from "react";
 import { useSelector} from "react-redux";
@@ -11,6 +11,7 @@ const Item = (props) => {
     const [showPopup,setShowPopup] = useState(false);
     const [inStock,setInstock] = useState(true);
     const account = useSelector((state) => state.AccountReducer.isSignedIn);
+    const [url,setUrl] = useState();
     const shopID = props.shopID;
    
 
@@ -32,10 +33,29 @@ const Item = (props) => {
         
            storageRef.getDownloadURL().then((url) =>{
             document.getElementById("image"+id).src=url;
+            setUrl(url);
           }); 
         
         
     }
+
+    useEffect(()=>{
+        async function getPic(id){
+            let storageRef = firebase.storage().ref().child(shopID+'/MenuImage/'+id);
+            
+               await storageRef.getDownloadURL().then((url) =>{
+                if (!document.getElementById("image"+id).src){
+                    return;
+                }
+                document.getElementById("image"+id).src=url;
+                setUrl(url);
+              }); 
+            
+            
+        }
+        getPic(props.id);
+        return(()=>null);
+    },[])
 
  
 
@@ -44,9 +64,7 @@ const Item = (props) => {
         <div className='product' >
             <div className='itemPhoto' onClick={()=>{togglePopup();}}>
                 <img id={"image"+props.id} src="" />
-                {props.id ?
-                getPic(props.id)
-                : null}
+                
             </div>
             <div className='itemInfo'>
                 {inStock ?
@@ -60,7 +78,7 @@ const Item = (props) => {
             </div>
             <div className='app'>
                 {showPopup ? 
-                <Confirm name={props.name} price={props.price} id={props.id} message="買い物かごに追加しますか？"　action="かごに追加"　height='50%' closePopup={()=>{togglePopup();}}/>
+                <Confirm pic={url} name={props.name} price={props.price} id={props.id} message={props.name}　design="item_conf" action="かごに追加"　height='50%' closePopup={()=>{togglePopup();}}/>
                 : null
                 }
             </div>

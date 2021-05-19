@@ -6,7 +6,7 @@ import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 
 
 const Login　= (props) => {
-    const [data,setData] = useState([]);
+  
 
 
       const uiConfig = {
@@ -22,15 +22,15 @@ const Login　= (props) => {
         
         <div className="basket">
             <div className="basket_inner">
-            <div class="log-form">
-                <h2>Login to your shop account</h2>
-                <div >
+            
+                <h2>LOGIN</h2>
+                <div id="login_menu">
                   
-                  <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
+                  <StyledFirebaseAuth  uiConfig={uiConfig} firebaseAuth={firebase.auth()} />
                   
                   </div >
           
-            </div>
+        
             {props.closePopup ?
               <button class='close' onClick={props.closePopup}>メニューに戻る</button>
             : null

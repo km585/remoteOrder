@@ -8,5 +8,5 @@
 
 ４：npm start　でアプリ実行。
 
-デプロイ済みのWEBアプリへ下記のURLからアクセス。
-https://smartorders-product-server.web.app/us4gc9jiYQcboFtJGFDMS84xRew1
+デプロイ済みのWEBアプリへ次のURLからアクセス。
+https://smartorders-product-server.web.app/mxyVs43feheUCfGnGfPTUmQ3F853
